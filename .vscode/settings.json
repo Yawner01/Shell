@@ -3,6 +3,8 @@
         "stdbool.h": "c",
         "lexer.h": "c",
         "env_utils.h": "c",
-        "unistd.h": "c"
+        "unistd.h": "c",
+        "stdlib.h": "c",
+        "stdio.h": "c"
     }
 }

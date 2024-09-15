@@ -48,7 +48,7 @@ void search_path(char *command) {
         exit(1);
     }
 
-    char *path_copy = strdup(path);
+    char *path_copy = my_strdup(path);
     if (path_copy == NULL) {
         fprintf(stderr, "Memory allocation failure\n");
         exit(1);
@@ -79,4 +79,12 @@ void search_path(char *command) {
 
     printf("Command '%s' not found\n", command);
     free(path_copy);
+}
+
+char *my_strdup(const char *src) {
+    char *dup = malloc(strlen(src) + 1);
+    if (dup != NULL) {
+        strcpy(dup, src);
+    }
+    return dup;
 }
