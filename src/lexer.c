@@ -3,10 +3,23 @@
 #include <stdlib.h>
 #include <string.h>
 
-int main()
-{
+extern char **environ;
+
+int main() {
+
+	int i = 0;
+    // Iterate through the environ array and print each environment variable
+    while (environ[i] != NULL) {
+        printf("%s\n", environ[i]);
+        i++;
+    }
+
 	while (1) {
-		printf("> ");
+		char *user = getenv("USER");
+		char *machine = getenv("MACHINE");
+		char *pwd = getenv("PWD");
+
+		printf("%s@%s:%s> ", user, machine, pwd);
 
 		/* input contains the whole command
 		 * tokens contains substrings from input split by spaces
