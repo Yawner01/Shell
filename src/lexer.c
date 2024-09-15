@@ -1,18 +1,10 @@
 #include "lexer.h"
+#include "env_utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-extern char **environ;
-
 int main() {
-
-	int i = 0;
-    // Iterate through the environ array and print each environment variable
-    while (environ[i] != NULL) {
-        printf("%s\n", environ[i]);
-        i++;
-    }
 
 	while (1) {
 		char *user = getenv("USER");
@@ -30,8 +22,16 @@ int main() {
 
 		tokenlist *tokens = get_tokens(input);
 		for (int i = 0; i < tokens->size; i++) {
+			if (tokens->items[i][0] == '$') {
+				get_env_variable(tokens->items[i] + 1, &tokens->items[i]);
+			}
+            if (tokens->items[i][0] == '~') {
+                replace_tilde(&tokens->items[i]);
+            }
 			printf("token %d: (%s)\n", i, tokens->items[i]);
 		}
+
+        search_path(tokens->items[0]);
 
 		free(input);
 		free_tokens(tokens);

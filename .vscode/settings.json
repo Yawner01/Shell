@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "stdbool.h": "c",
+        "lexer.h": "c",
+        "env_utils.h": "c",
+        "unistd.h": "c"
+    }
+}
