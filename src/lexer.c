@@ -1,4 +1,5 @@
 #include "lexer.h"
+#include "pipeline.h"
 #include "env_utils.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -82,6 +83,19 @@ void add_token(tokenlist *tokens, char *item) {
 	tokens->size += 1;
 }
 
+void print_tokens(const tokenlist *tokens) {
+	if (tokens == NULL) {
+		printf("NULL");
+		return;
+	}
+
+	for (size_t i = 0; i < tokens->size - 1; ++i) {
+		printf("%s, ", tokens->items[i]);
+	}
+
+	printf(tokens->items[tokens->size - 1]);
+}
+
 tokenlist *get_tokens(char *input) {
 	char *buf = (char *)malloc(strlen(input) + 1);
 	strcpy(buf, input);
@@ -97,6 +111,10 @@ tokenlist *get_tokens(char *input) {
 }
 
 void free_tokens(tokenlist *tokens) {
+	if (tokens == NULL) {
+		return;
+	}
+
 	for (int i = 0; i < tokens->size; i++)
 		free(tokens->items[i]);
 	free(tokens->items);
