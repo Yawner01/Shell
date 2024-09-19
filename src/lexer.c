@@ -119,4 +119,6 @@ void free_tokens(tokenlist *tokens) {
 		free(tokens->items[i]);
 	free(tokens->items);
 	free(tokens);
+
+	tokens = NULL;
 }
