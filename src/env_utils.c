@@ -43,13 +43,20 @@ void replace_tilde(char ** token) {
     }
 }
 
-void search_path(char *command) {
+void search_path(char *input) { //changed command to input to take in the whole line
     char *path = getenv("PATH");
     if (path == NULL) {
         fprintf(stderr, "Failed to get $PATH\n");
         exit(1);
     }
 
+    tokenlist *tokens = get_tokens(input);
+    if (tokens->size == 0) {
+        fprintf(stderr, "No command providec\n");
+        return;
+    }
+
+    char *command = tokens->items[0]; //first token is command
     char *path_copy = my_strdup(path);
     if (path_copy == NULL) {
         fprintf(stderr, "Memory allocation failure\n");
@@ -74,40 +81,31 @@ void search_path(char *command) {
             pid_t pid = fork();
             if (pid < 0) {
                 fprintf(stderr, "Fork failed\n"); //verify its not negative
-                exit(EXIT_FAILURE);
+                exit(1);
             } 
-            else if (pid == 0) { //child process
-                char *args[100]; //this allows for multiple arguments like the ls -al
-                int i = 0;
+            
+            if (pid == 0) { //child process
 
-                //here i am going to split the command into tokens and store them
-                char *token = strtok(command, " ");
-                while (token != NULL) {
-                    args[i++] = token; //storing
-                    token = strtok(NULL, " ");
-                }
-                args[i] = NULL; //null terminator
+                printf("[debug] Child process executing command: %s\n", full_path);
+                excev(full_path, token->items);
 
-                execv(full_path, args); //execute command with arguments 
-
-                fprintf(stderr, "Error executing: %s\n", full_path);//failure notif if it doesnt work
-                exit(EXIT_FAILURE);
+                printf("[debug] Execution command %s failed.\n", full_path);
+                exit(1);
                 
             } 
-            else { //parent
-                //here is where the process waits for
-                //the child process to complete
+            else {
+                //parent waits
                 int status;
-                waitpid(pid, &status, 0);
-                if (WIFEXITED(status)) { 
-                    printf("Child exited with status %d\n", WEXITSTATUS(status)); //failure notif if it doesnt work
+                wait(&status);
+                if (WIFEXITED(status)) {
+                    printf("[debgu] child exited with status: %d\n", WEXITSTATUS(status));
+                } else {
+                    printf("[debug] child did not exit right\n");
                 }
 
             }
 
-            
-            free(path_copy);
-            return;
+            break;
         }
 
         directory = strtok(NULL, ":");
@@ -115,6 +113,7 @@ void search_path(char *command) {
 
     printf("Command '%s' not found\n", command);
     free(path_copy);
+    free_tokens(tokens);
 }
 
 char *my_strdup(const char *src) {
