@@ -16,21 +16,8 @@ pipe_t* new_pipe(tokenlist* tokens) {
 
     // validate pipe_t struct
     if (new_pipe == NULL) {
-        fprintf(stderr, "[ERROR] failed to create pipe\n");
+        fprintf(stderr, "[ERROR] failed to create pipe struct\n");
         exit(1);   
-    }
-
-    // create read and write end of pipe
-    int pipe_result = 0; //pipe(new_pipe->fd); TODO: uncomment and replace '= 0;' with this line
-
-    // validate pipe creation
-    // result < 0: creation failed
-    // result = 0: returned to newly created child process
-    // result > 0: returned to parent or caller and the value contains the
-	// process ID of the newly created child process
-    if (pipe_result < 0) {
-        fprintf(stderr, "[ERROR] failed pipe file descriptors\n");
-        exit(1);
     }
 
     new_pipe->tokens = tokens;
@@ -49,6 +36,72 @@ void free_pipe(pipe_t* pipe) {
     free_tokens(pipe->tokens);
     free(pipe);
     pipe = NULL;
+}
+
+void execute_pipe_commands(pipe_t* pip) {
+
+    // validate pipe
+    if (pip == NULL) {
+        printf("[ERROR] attempted to execute commands on null pipe, ignoring\n");
+        return;
+    }
+
+    // keeps track of input fd for next command in pipeline
+    int in_fd = 0;
+
+    // access and execute the commands stored in the pipe struct's tokens
+    for (int i = 0; i < pip->tokens->size; ++i) {
+
+        // create read and write end of pipe
+        int pipe_result = pipe(pip->fd);
+
+        // check for errors after calling pipe()
+        if (pipe_result == -1) {
+            fprintf(stderr, "[ERROR] failed to create read/write ends of pipe\n");
+            exit(1);
+        }
+
+        // create child process
+        pid_t pid = fork();
+
+        // check for errors in process creation
+        if (pid == -1) {
+            fprintf(stderr, "[ERROR] failed to create child process\n");
+            exit(1);   
+        }
+
+        // if child process created successfully
+        if (pid == 0) {
+
+            // redirect input
+            if (in_fd != 0) {
+                dup2(in_fd, 0);
+                close(in_fd);
+            }
+
+            // redirect output
+            if (pip->next != NULL) {
+                dup2(pip->fd[1], 1);
+                close(pip->fd[1]);
+            }
+
+            // close read end of pipe
+            close(pip->fd[0]);
+
+            // execute the command
+            execv(pip->tokens->items[i], pip->tokens->items);
+        }
+        // otherwise parent process
+        else {
+
+            // wait for child process to finish
+            wait(NULL);
+            // close write end of pipe
+            close(pip->fd[1]);
+            // save input for next command
+            in_fd = pip->fd[0];
+        }
+    }
 }
 
 // pipeline_t functions
@@ -90,7 +143,7 @@ void free_pipeline(pipeline_t* pipeline) {
     pipeline = NULL;
 }
 
-// Removes the first pipe in the pipeline.
+// Removes and deallocates the first pipe in the pipeline.
 void pop_pipe(pipeline_t* pipeline)
 {
     // validate pipeline
@@ -153,6 +206,20 @@ bool pipeline_empty(pipeline_t* pipeline) {
     return pipeline->start->next == NULL;
 }
 
+// Executes the commands of, and pops, every pipe in the pipeline.
+void execute_pipeline_commands(pipeline_t* pipeline) {
+
+    if (pipeline == NULL) {
+        printf("[ERROR] attempted to execute pipeline commands on null pipeline, ignoring\n");
+        return;
+    }
+
+    while (!pipeline_empty(pipeline)) {
+        execute_pipe_commands(pipeline_front(pipeline));
+        pop_pipe(pipeline);
+    }
+}
+
 void test_pipeline() {
 
     // create pipeline
@@ -188,6 +255,6 @@ void test_pipeline() {
 		printf("empty\n");
 	}
 
-	// destroy pipeline when no longer needed
+	// destroy pipeline and all remaining pipes when no longer needed
 	free_pipeline(pipeline);
 }

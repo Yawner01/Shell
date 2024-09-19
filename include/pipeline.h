@@ -17,15 +17,17 @@ typedef struct {
     pipe_t* end;
 } pipeline_t;
 
-pipe_t* new_pipe(tokenlist* tokens);
-void    free_pipe(pipe_t* pipe);
+pipe_t* new_pipe(tokenlist* tokens);                        // Returns a newly allocated pipe_t struct. The created pipe shallow copies the tokenlist parameter.
+void    free_pipe(pipe_t* pipe);                            // Deallocates the pipe and any allocated data inside.
+void    execute_pipe_commands(pipe_t* pip);
 
-pipeline_t* new_pipeline();
-void        free_pipeline(pipeline_t* pipeline);
-void        pop_pipe(pipeline_t* pipeline);
-void        push_pipe(pipeline_t* pipeline, pipe_t* pipe);
+pipeline_t* new_pipeline();                                 // Returns a newly allocated pipeline_t struct.
+void        free_pipeline(pipeline_t* pipeline);            // Deallocates the pipeline and any allocated data inside.
+void        pop_pipe(pipeline_t* pipeline);                 // Removes and deallocates the first pipe in the pipeline.
+void        push_pipe(pipeline_t* pipeline, pipe_t* pipe);  // Inserts to the end of the pipeline.
 pipe_t*     pipeline_front(pipeline_t* pipeline);
 bool        pipeline_empty(pipeline_t* pipeline);
+void        execute_pipeline_commands(pipeline_t* pipeline); // Executes the commands of, and pops, every pipe in the pipeline.
 
 // pipeline test function
 void test_pipeline();
