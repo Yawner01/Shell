@@ -6,6 +6,9 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <fcntl.h>
+
+#define PERMISSIONS (S_IRUSR | S_IWUSR)
 
 void get_env_variable(char *variable, char ** token) {
 	char *env_value = getenv(variable);
@@ -59,8 +62,21 @@ void search_path(tokenlist *tokens) { //changed command to input to take in the 
     }
 
     char *directory = strtok(path_copy, ":");
-
     char full_path[1024];
+    int input_fd = -1, output_fd = -1;
+
+    char *input_file = NULL;
+    char *output_file = NULL;
+
+    for (int i = 0; i < tokens->size; ++i) {
+        if(strcmp(tokens->items[i], ">") == 0 && i + 1 < tokens->size) {
+            output_file = tokens->items[i + 1];
+            tokens->items[i] = NULL;
+        } else if (strcmp(tokens->items[i], "<") == 0 && i + 1 < tokens->size) {
+            input_file = tokens->items[i + 1];
+            tokens->items[i] = NULL;
+        }
+    }
 
     while (directory != NULL) {
         if (directory[strlen(directory) - 1] == '/') {
@@ -77,6 +93,28 @@ void search_path(tokenlist *tokens) { //changed command to input to take in the 
                 fprintf(stderr, "Fork failed\n"); //verify its not negative
                 exit(1);
             } else if (pid == 0) { //child process
+                // Input redirection
+                if (input_file != NULL) {
+                    input_fd = open(input_file, O_RDONLY);
+                    if (input_fd == -1) {
+                        perror("Error opening input file");
+                        exit(1);
+                    }
+                    dup2(input_fd, STDIN_FILENO);
+                    close(input_fd);
+                }
+
+                //Output Redirection
+                if (output_file != NULL) {
+                    output_fd = open(output_file, O_WRONLY | O_CREAT | O_TRUNC, PERMISSIONS);
+                    if (output_fd == -1) {
+                        perror("Error opening output file");
+                        exit(1);
+                    }
+                    dup2(output_fd, STDOUT_FILENO);
+                    close(output_fd);
+                }
+
                 tokens->items[0] = full_path;
                 execv(full_path, tokens->items);
 
