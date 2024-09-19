@@ -1,4 +1,5 @@
 #include "env_utils.h"
+#include "lexer.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,17 +44,11 @@ void replace_tilde(char ** token) {
     }
 }
 
-void search_path(char *input) { //changed command to input to take in the whole line
+void search_path(tokenlist *tokens) { //changed command to input to take in the whole line
     char *path = getenv("PATH");
     if (path == NULL) {
         fprintf(stderr, "Failed to get $PATH\n");
         exit(1);
-    }
-
-    tokenlist *tokens = get_tokens(input);
-    if (tokens->size == 0) {
-        fprintf(stderr, "No command providec\n");
-        return;
     }
 
     char *command = tokens->items[0]; //first token is command
@@ -77,35 +72,27 @@ void search_path(char *input) { //changed command to input to take in the whole 
         if (access(full_path, X_OK) == 0) {
             printf("Command found: %s\n", full_path);
 
-            //fork
             pid_t pid = fork();
             if (pid < 0) {
                 fprintf(stderr, "Fork failed\n"); //verify its not negative
                 exit(1);
-            } 
-            
-            if (pid == 0) { //child process
+            } else if (pid == 0) { //child process
+                tokens->items[0] = full_path;
+                execv(full_path, tokens->items);
 
-                printf("[debug] Child process executing command: %s\n", full_path);
-                excev(full_path, token->items);
-
-                printf("[debug] Execution command %s failed.\n", full_path);
+                perror("execv failed");
+                free(path_copy);
                 exit(1);
-                
-            } 
-            else {
-                //parent waits
+            } else { //parent waits
                 int status;
                 wait(&status);
                 if (WIFEXITED(status)) {
-                    printf("[debgu] child exited with status: %d\n", WEXITSTATUS(status));
+                    printf("child exited with status: %d\n", WEXITSTATUS(status));
+                    return;
                 } else {
-                    printf("[debug] child did not exit right\n");
+                    printf("child did not exit right\n");
                 }
-
             }
-
-            break;
         }
 
         directory = strtok(NULL, ":");

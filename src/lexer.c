@@ -32,7 +32,7 @@ int main() {
 			printf("token %d: (%s)\n", i, tokens->items[i]);
 		}
 
-        search_path(tokens->items[0]);
+        search_path(tokens);
 
 		free(input);
 		free_tokens(tokens);
@@ -93,7 +93,7 @@ void print_tokens(const tokenlist *tokens) {
 		printf("%s, ", tokens->items[i]);
 	}
 
-	printf(tokens->items[tokens->size - 1]);
+	printf("%s", tokens->items[tokens->size - 1]);
 }
 
 tokenlist *get_tokens(char *input) {
