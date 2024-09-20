@@ -1,5 +1,6 @@
 #include "lexer.h"
 #include "pipeline.h"
+#include "commands.h"
 #include "env_utils.h"
 #include "exec_utils.h"
 #include <stdio.h>
@@ -7,6 +8,13 @@
 #include <string.h>
 
 int main() {
+
+	tokenlist* command_history = new_tokenlist();
+
+	const int   MAX_JOBS = 8;
+	int         num_jobs = 0;
+
+	job_t jobs[MAX_JOBS];
 
 	while (1) {
 		char *user = getenv("USER");
@@ -35,6 +43,14 @@ int main() {
 		
 		int num_cmds;
 		tokenlist **commands = parse_pipes(tokens, &num_cmds);
+
+		// insert valid commands in command history
+		for (int i = 0; i < num_cmds; ++i) {
+			char* cmd = commands[i]->items[0];
+			if (is_valid_command(cmd)) {
+				add_to_history(command_history, cmd);
+			}
+		}
 
 		execute_commands(commands, num_cmds);
 
