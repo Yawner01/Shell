@@ -7,6 +7,7 @@
         "stdlib.h": "c",
         "stdio.h": "c",
         "string.h": "c",
-        "exec_utils.h": "c"
+        "exec_utils.h": "c",
+        "fcntl.h": "c"
     }
 }

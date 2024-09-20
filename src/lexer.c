@@ -1,6 +1,7 @@
 #include "lexer.h"
 #include "pipeline.h"
 #include "env_utils.h"
+#include "exec_utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,8 +32,11 @@ int main() {
             }
 			printf("token %d: (%s)\n", i, tokens->items[i]);
 		}
+		
+		int num_cmds;
+		tokenlist **commands = parse_pipes(tokens, &num_cmds);
 
-        search_path(tokens);
+		execute_commands(commands, num_cmds);
 
 		free(input);
 		free_tokens(tokens);
