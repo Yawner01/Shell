@@ -1,4 +1,5 @@
 #include "commands.h"
+#include "env_utils.h"
 
 // Exits the process after background processes are completed and prints the last 3 commands.
 void cmd_exit(tokenlist* history) {
@@ -109,7 +110,7 @@ void add_to_history(tokenlist* history, char* command) {
 		}
 
         // insert most recent command
-		strcpy(history->items[history->size - 1], command);
+		history->items[history->size - 1] = my_strdup(command);
 	}
 }
 
@@ -121,16 +122,25 @@ bool is_valid_internal_command(const char* command) {
 
 bool is_valid_external_command(const char* command) {
     char* path = getenv("PATH");
-    char* dir = strtok(path, ":");
+
+    if (path == NULL) {
+        return false;
+    }
+
+    char* path_copy = my_strdup(path);
+    char* dir = strtok(path_copy, ":");
     char  full_path[256];
 
     while (dir != NULL) {
         snprintf(full_path, sizeof(full_path), "%s%s", dir, command);
         if (access(full_path, X_OK) == 0) {
+            free(path_copy);
             return true;
         }
         dir = strtok(NULL, ":");
     }
+
+    free(path_copy);
     return false;
 }
 
