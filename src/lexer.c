@@ -52,11 +52,13 @@ int main() {
 			}
 		}
 
-		execute_commands(commands, num_cmds);
+		execute_commands(commands, num_cmds, command_history, jobs, num_jobs);
 
 		free(input);
 		free_tokens(tokens);
 	}
+
+	free_tokens(command_history);
 
 	return 0;
 }

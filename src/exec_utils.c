@@ -1,5 +1,6 @@
 #include "lexer.h"
 #include "env_utils.h"
+#include "exec_utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,10 +38,22 @@ tokenlist **parse_pipes(tokenlist *tokens, int *num_cmds) {
     return commands;
 }
 
-void execute_commands(tokenlist **commands, int num_cmds) {
+void execute_commands(tokenlist **commands, int num_cmds, tokenlist* command_history, job_t* jobs, int num_jobs) {
     if (num_cmds == 1) {
-        int input_fd = -1, output_fd = -1;
 
+        // check built-in commands
+        if (strcmp(commands[0]->items[0], "cd") == 0) {
+            cmd_cd(commands[0]);
+            return;
+        } else if (strcmp(commands[0]->items[0], "jobs") == 0) {
+            cmd_jobs(jobs, num_jobs);
+            return;
+        } else if (strcmp(commands[0]->items[0], "exit") == 0) {
+            cmd_exit(command_history);
+            return;
+        }
+
+        int input_fd = -1, output_fd = -1;
         char *input_file = NULL;
         char *output_file = NULL;
 
