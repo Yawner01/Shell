@@ -140,7 +140,7 @@ bool is_valid_external_command(const char* command) {
     char  full_path[256];
 
     while (dir != NULL) {
-        snprintf(full_path, sizeof(full_path), "%s%s", dir, command);
+        snprintf(full_path, sizeof(full_path), "%s/%s", dir, command);
         if (access(full_path, X_OK) == 0) {
             free(path_copy);
             return true;
