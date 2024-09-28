@@ -59,7 +59,6 @@ void cmd_cd(tokenlist* args) {
         fprintf(stderr, "cd: too many arguments\n");
     }
     else {
-        
         // go to specified directory
         if (chdir(args->items[1]) != 0) {
             perror("cd");
