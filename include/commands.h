@@ -2,6 +2,7 @@
 #define COMMANDS_H
 
 #include "lexer.h"
+#include "job_utils.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,12 +11,6 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <limits.h>
-
-typedef struct {
-    int number;
-    pid_t pid;
-    char* command;
-} job_t;
 
 void add_to_history(tokenlist* history, char* command);
 
@@ -35,6 +30,6 @@ void cmd_exit(tokenlist* history);
 void cmd_cd(tokenlist* args);
 
 // Prints a list of active background processes.
-void cmd_jobs(job_t* jobs, int num_jobs);
+void cmd_jobs(job_t* jobs, int* num_jobs);
 
 #endif

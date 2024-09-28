@@ -3,6 +3,7 @@
 #include "commands.h"
 #include "env_utils.h"
 #include "exec_utils.h"
+#include "job_utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,10 +12,17 @@ int main() {
 
 	tokenlist* command_history = new_tokenlist();
 
-	const int   MAX_JOBS = 8;
-	int         num_jobs = 0;
+	int num_jobs = 0;
 
 	job_t jobs[MAX_JOBS];
+	for (int i = 0; i < MAX_JOBS; i++) {
+		jobs[i].job_number = 0;
+		jobs[i].pid = 0;
+		jobs[i].command = NULL;
+		jobs[i].done = false;
+	}
+
+	int next_job_number = 1;
 
 	while (1) {
 		char *user = getenv("USER");
@@ -52,7 +60,9 @@ int main() {
 			}
 		}
 
-		execute_commands(commands, num_cmds, command_history, jobs, num_jobs);
+		execute_commands(commands, num_cmds, command_history, jobs, &num_jobs, &next_job_number);
+
+		check_jobs(jobs, MAX_JOBS, &num_jobs);
 
 		free(input);
 		free_tokens(tokens);
@@ -89,6 +99,7 @@ char *get_input(void) {
 tokenlist *new_tokenlist(void) {
 	tokenlist *tokens = (tokenlist *)malloc(sizeof(tokenlist));
 	tokens->size = 0;
+	tokens->background = false;
 	tokens->items = (char **)malloc(sizeof(char *));
 	tokens->items[0] = NULL; /* make NULL terminated */
 	return tokens;

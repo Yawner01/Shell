@@ -6,6 +6,7 @@
 typedef struct {
     char ** items;
     size_t size;
+    bool background;
 } tokenlist;
 
 char * get_input(void);

@@ -1,5 +1,6 @@
 #include "commands.h"
 #include "env_utils.h"
+#include "job_utils.h"
 
 // Exits the process after background processes are completed and prints the last 3 commands.
 void cmd_exit(tokenlist* history) {
@@ -78,12 +79,10 @@ void cmd_cd(tokenlist* args) {
 }
 
 // Prints a list of active background processes.
-void cmd_jobs(job_t* jobs, int num_jobs) {
+void cmd_jobs(job_t* jobs, int* num_jobs) {
 
     if (num_jobs > 0) {
-        for (size_t i = 0; i < num_jobs; ++i) {
-            printf("[%d][%d] %s\n", jobs[i].number, jobs[i].pid, jobs[i].command);
-        }
+        check_jobs(jobs, MAX_JOBS, num_jobs);
     }
     else {
         printf("no active background processes\n");
