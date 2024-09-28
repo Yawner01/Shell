@@ -14,12 +14,14 @@ void cmd_exit(tokenlist* history) {
         printf("Last command(s):\n");
 
         if (history->size == 0) {
-            printf("no commands\n");
+            printf("no valid commands\n");
         }
-        else {
-            for (size_t i = (history->size > 3 ? history->size - 3 : 0); i < history->size; ++i) {
+        else if (history->size >= 3) {
+            for (size_t i = history->size - 3; i < history->size; ++i) {
                 printf("%s\n", history->items[i]);
             }
+        } else {
+            printf("%s\n", history->items[history->size - 1]);
         }
     }
     else {
@@ -123,8 +125,7 @@ void add_to_history(tokenlist* history, char* command) {
 }
 
 bool is_valid_internal_command(const char* command) {
-    return (strcmp(command, "exit") == 0 ||
-            strcmp(command, "cd")   == 0 ||
+    return (strcmp(command, "cd")   == 0 ||
             strcmp(command, "jobs") == 0);
 }
 
