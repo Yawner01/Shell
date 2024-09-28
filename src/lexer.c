@@ -14,8 +14,8 @@ int main() {
 
 	int num_jobs = 0;
 
-	job_t jobs[MAX_JOBS];
-	for (int i = 0; i < MAX_JOBS; i++) {
+	job_t jobs[10];
+	for (int i = 0; i < 10; i++) {
 		jobs[i].job_number = 0;
 		jobs[i].pid = 0;
 		jobs[i].command = NULL;
@@ -62,7 +62,7 @@ int main() {
 
 		execute_commands(commands, num_cmds, command_history, jobs, &num_jobs, &next_job_number);
 
-		check_jobs(jobs, MAX_JOBS, &num_jobs);
+		check_jobs(jobs, 10, &num_jobs);
 
 		free(input);
 		free_tokens(tokens);

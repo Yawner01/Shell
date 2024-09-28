@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 typedef struct {
     int job_number;
@@ -10,8 +12,6 @@ typedef struct {
     char *command;
     bool done;
 } job_t;
-
-const int   MAX_JOBS = 10;
 
 int find_free_job_slot(job_t *jobs, int max_jobs);
 void add_job(job_t *jobs, int max_jobs, int *num_jobs, pid_t pid, int *next_job_number);
