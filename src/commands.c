@@ -64,6 +64,15 @@ void cmd_cd(tokenlist* args) {
             perror("cd");
         }
     }
+
+    char cwd[PATH_MAX];
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+        if (setenv("PWD", cwd, 1) != 0) {
+            perror("setenv error");
+        }
+    } else {
+        perror("getcwd error");
+    }
 }
 
 // Prints a list of active background processes.
