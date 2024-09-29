@@ -57,6 +57,7 @@ void execute_commands(tokenlist **commands, int num_cmds, tokenlist* command_his
         }
     }
 
+    pid_t pids[num_cmds];
     for (int i = 0; i < num_cmds; i++) {
         pid_t pid = fork();
 
@@ -82,6 +83,8 @@ void execute_commands(tokenlist **commands, int num_cmds, tokenlist* command_his
             perror("execv failed");
             free(full_path);
             exit(1);
+        } else {
+            pids[i] = pid;
         }
     }
 
@@ -89,8 +92,15 @@ void execute_commands(tokenlist **commands, int num_cmds, tokenlist* command_his
         close(pipefds[i]);
     }
 
-    for (int i = 0; i < num_cmds; i++) {
-        wait(NULL);
+    if(commands[num_cmds-1]->background) {
+        char *cmd_line = reconstruct_command_line(commands, num_cmds);
+        add_job(jobs, 10, num_jobs, pids[num_cmds-1], cmd_line, next_job_number);
+        free(cmd_line);
+    } else {
+        for (int i = 0; i < num_cmds; i++) {
+            int status;
+            waitpid(pids[i], &status, 0);
+        }
     }
 }
 
@@ -111,12 +121,14 @@ void execute_single_command(tokenlist **commands, int num_cmds, tokenlist* comma
     char *input_file = NULL;
     char *output_file = NULL;
 
+    char *cmd_line = reconstruct_command_line(commands, num_cmds);
+
     for (int i = 0; i < commands[0]->size; ++i) {
         if(strcmp(commands[0]->items[i], ">") == 0 && i + 1 < commands[0]->size) {
-            output_file = commands[0]->items[i + 1];
+            output_file = my_strdup(commands[0]->items[i + 1]);
             commands[0]->items[i] = NULL;
         } else if (strcmp(commands[0]->items[i], "<") == 0 && i + 1 < commands[0]->size) {
-            input_file = commands[0]->items[i + 1];
+            input_file = my_strdup(commands[0]->items[i + 1]);
             commands[0]->items[i] = NULL;
         }
     }  
@@ -137,6 +149,8 @@ void execute_single_command(tokenlist **commands, int num_cmds, tokenlist* comma
             close(input_fd);
         }
 
+        free(input_file);
+
         //Output Redirection
         if (output_file != NULL) {
             output_fd = open(output_file, O_WRONLY | O_CREAT | O_TRUNC, PERMISSIONS);
@@ -148,6 +162,8 @@ void execute_single_command(tokenlist **commands, int num_cmds, tokenlist* comma
             close(output_fd);
         }
 
+        free(output_file);
+
         char *full_path = find_path(commands[0]);
 
         commands[0]->items[0] = full_path;
@@ -157,12 +173,12 @@ void execute_single_command(tokenlist **commands, int num_cmds, tokenlist* comma
         exit(1);
     } else { //parent process
         if (commands[0]->background) {
-            add_job(jobs, MAX_JOBS, num_jobs, pid, next_job_number);
+            add_job(jobs, 10, num_jobs, pid, cmd_line, next_job_number);
         } else {
             int status;
             wait(&status);
             if (WIFEXITED(status)) {
-                printf("child exited with status: %d\n", WEXITSTATUS(status));
+                //printf("child exited with status: %d\n", WEXITSTATUS(status));
                 return;
             } else {
                 printf("child did not exit right\n");

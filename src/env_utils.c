@@ -70,7 +70,7 @@ char *find_path(tokenlist *tokens) { //changed command to input to take in the w
         }
 
         if (access(full_path, X_OK) == 0) {
-            printf("Command found: %s\n", full_path);
+            //printf("Command found: %s\n", full_path);
             free(path_copy);
             return my_strdup(full_path);
         }

@@ -24,48 +24,82 @@ int main() {
 
 	int next_job_number = 1;
 
+	fd_set readfds;
+	struct timeval timeout;
+	bool show_prompt = true;
+
 	while (1) {
+
+		int process_finished = check_jobs(jobs, 10, &num_jobs);
+
+		FD_ZERO(&readfds);
+		FD_SET(STDIN_FILENO, &readfds);
+
+		timeout.tv_sec = 0;
+		timeout.tv_usec = 0;
+
 		char *user = getenv("USER");
 		char *machine = getenv("MACHINE");
 		char *pwd = getenv("PWD");
 
-		printf("%s@%s:%s> ", user, machine, pwd);
-
-		/* input contains the whole command
-		 * tokens contains substrings from input split by spaces
-		 */
-
-		char *input = get_input();
-		printf("whole input: %s\n", input);
-
-		tokenlist *tokens = get_tokens(input);
-		for (int i = 0; i < tokens->size; i++) {
-			if (tokens->items[i][0] == '$') {
-				get_env_variable(tokens->items[i] + 1, &tokens->items[i]);
-			}
-            if (tokens->items[i][0] == '~') {
-                replace_tilde(&tokens->items[i]);
-            }
-			printf("token %d: (%s)\n", i, tokens->items[i]);
-		}
-		
-		int num_cmds;
-		tokenlist **commands = parse_pipes(tokens, &num_cmds);
-
-		// insert valid commands in command history
-		for (int i = 0; i < num_cmds; ++i) {
-			char* cmd = commands[i]->items[0];
-			if (is_valid_command(cmd)) {
-				add_to_history(command_history, cmd);
-			}
+		if (process_finished == 1 || show_prompt) {
+			show_prompt = false;
+			printf("%s@%s:%s> ", user, machine, pwd);
+			fflush(stdout);
 		}
 
-		execute_commands(commands, num_cmds, command_history, jobs, &num_jobs, &next_job_number);
+		int ret = select(STDIN_FILENO + 1, &readfds, NULL, NULL, &timeout);
+
+		if (ret == -1) {
+			perror("select");
+			break;
+		}
+
+		if (ret == 0) {
+			continue;
+		}
+
+		if (FD_ISSET(STDIN_FILENO, &readfds)) {
+			show_prompt = true;
+			/* input contains the whole command
+			* tokens contains substrings from input split by spaces
+			*/
+
+			check_jobs(jobs, 10, &num_jobs);
+
+			char *input = get_input();
+			//printf("whole input: %s\n", input);
+
+			tokenlist *tokens = get_tokens(input);
+			for (int i = 0; i < tokens->size; i++) {
+				if (tokens->items[i][0] == '$') {
+					get_env_variable(tokens->items[i] + 1, &tokens->items[i]);
+				}
+				if (tokens->items[i][0] == '~') {
+					replace_tilde(&tokens->items[i]);
+				}
+				//printf("token %d: (%s)\n", i, tokens->items[i]);
+			}
+			
+			int num_cmds;
+			tokenlist **commands = parse_pipes(tokens, &num_cmds);
+
+			// insert valid commands in command history
+			for (int i = 0; i < num_cmds; ++i) {
+				char* cmd = commands[i]->items[0];
+				if (is_valid_command(cmd)) {
+					add_to_history(command_history, cmd);
+				}
+			}
+
+			execute_commands(commands, num_cmds, command_history, jobs, &num_jobs, &next_job_number);
+
+			free(input);
+			free_tokens(tokens);
+		}
 
 		check_jobs(jobs, 10, &num_jobs);
 
-		free(input);
-		free_tokens(tokens);
 	}
 
 	free_tokens(command_history);
