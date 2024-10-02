@@ -2,8 +2,10 @@
 #include "env_utils.h"
 #include "lexer.h"
 
-int find_free_job_slot(job_t *jobs, int max_jobs) {
-    for (int i = 0; i < max_jobs; i++) {
+#define MAX_JOBS 10  // Define the maximum number of jobs
+
+int find_free_job_slot(job_t *jobs) {
+    for (int i = 0; i < MAX_JOBS; i++) {
         if (jobs[i].job_number == 0) {
             return i;
         }
@@ -11,13 +13,13 @@ int find_free_job_slot(job_t *jobs, int max_jobs) {
     return -1;
 }
 
-void add_job(job_t *jobs, int max_jobs, int *num_jobs, pid_t pid, const char *command_line, int *next_job_number) {
-    if (*num_jobs >= max_jobs) {
+void add_job(job_t *jobs, int *num_jobs, pid_t pid, const char *command_line, int *next_job_number) {
+    if (*num_jobs >= MAX_JOBS) {
         fprintf(stderr, "Maximum background jobs reached. Cannot add more\n");
         return;
     }
 
-    int slot = find_free_job_slot(jobs, max_jobs);
+    int slot = find_free_job_slot(jobs);
     if (slot == -1) {
         fprintf(stderr, "No free job slots available.\n");
         return;
@@ -31,26 +33,32 @@ void add_job(job_t *jobs, int max_jobs, int *num_jobs, pid_t pid, const char *co
         perror("my_strdup");
         exit(1);
     }
-    
+
     (*num_jobs)++;
 
     printf("[%d] %d\n", jobs[slot].job_number, jobs[slot].pid);
 }
 
-int check_jobs(job_t *jobs, int max_jobs, int *num_jobs) {
+int check_jobs(job_t *jobs, int *num_jobs) {
     int status;
     pid_t pid;
     int background_process_completed = 0;
 
-    for (int i = 0; i < max_jobs; i++) {
+    for (int i = 0; i < MAX_JOBS; i++) {
         if (jobs[i].job_number != 0 && !jobs[i].done) {
+            // Call waitpid with WNOHANG to avoid blocking
             pid = waitpid(jobs[i].pid, &status, WNOHANG);
-            //printf("%d\n", jobs[i].pid);
-            if (pid == -1) {
-                perror("waitpid error");
+            
+            if (pid == 0) {
+                //process is still running,skip to next job
                 continue;
             }
-            if (pid > 0) {
+            else if (pid == -1) {
+                //ignore error, just skip job if waitpid fails
+                continue;
+            }
+            else if (pid == jobs[i].pid) {
+                //completed
                 printf("\n[%d] + done   %s\n", jobs[i].job_number, jobs[i].command);
 
                 free(jobs[i].command);
@@ -61,8 +69,6 @@ int check_jobs(job_t *jobs, int max_jobs, int *num_jobs) {
                 (*num_jobs)--;
 
                 background_process_completed = 1;
-            } else {
-                //printf("[%d][%d] %s\n", jobs[i].job_number, jobs[i].pid, jobs[i].command);
             }
         }
     }

@@ -79,15 +79,26 @@ void cmd_cd(tokenlist* args) {
 }
 
 // Prints a list of active background processes.
-void cmd_jobs(job_t* jobs, int* num_jobs) {
+#define MAX_JOBS 10  // Define a constant for max jobs
 
-    if (num_jobs > 0) {
-        check_jobs(jobs, 10, num_jobs);
+void cmd_jobs(job_t* jobs, int* num_jobs) {
+    check_jobs(jobs, MAX_JOBS, num_jobs);
+
+    int active_jobs = 0;
+    for (int i = 0; i < MAX_JOBS; i++) {
+        if (jobs[i].job_number != 0 && !jobs[i].done && jobs[i].command != NULL) {
+            printf("[%d]+ %d %s\n", jobs[i].job_number, jobs[i].pid, jobs[i].command);
+            active_jobs++;
+        }
     }
-    else {
+
+    if (active_jobs == 0) {
         printf("no active background processes\n");
     }
 }
+
+
+
 
 void add_to_history(tokenlist* history, char* command) {
 	
