@@ -57,14 +57,50 @@ void execute_commands(tokenlist **commands, int num_cmds, tokenlist* command_his
         }
     }
 
+    char *cmd_line = reconstruct_command_line(commands, num_cmds);
+
     pid_t pids[num_cmds];
     for (int i = 0; i < num_cmds; i++) {
+        int input_fd = -1, output_fd = -1;
+        char *input_file = NULL;
+        char *output_file = NULL;
+
+        for(int j = 0; j < commands[i]->size; j++) {
+            if (strcmp(commands[i]->items[j], ">") == 0 && j + 1 < commands[i]->size) {
+                output_file = my_strdup(commands[i]->items[j+1]);
+                commands[i]->items[j] = NULL;
+            } else if (strcmp(commands[i]->items[j], "<") == 0 && j + 1 < commands[i]->size) {
+                input_file = my_strdup(commands[i]->items[j+1]);
+                commands[i]->items[j] = NULL;
+            }
+        }
+
         pid_t pid = fork();
 
         if (pid < 0) {
             fprintf(stderr, "Fork failed\n"); //verify its not negative
             exit(1);
         } else if (pid == 0) {
+            if (input_file != NULL) {
+                input_fd = open(input_file, O_RDONLY);
+                if(input_fd == -1) {
+                    perror("Error opening input file");
+                    exit(1);
+                }
+                dup2(input_fd, STDIN_FILENO);
+                close(input_fd);
+            }
+
+            if (output_file != NULL) {
+                output_fd = open(output_file, O_WRONLY | O_CREAT | O_TRUNC, PERMISSIONS);
+                if ( output_fd == -1) {
+                    perror("Error opening output file");
+                    exit(1);
+                }
+                dup2(output_fd, STDOUT_FILENO);
+                close(output_fd);
+            }
+
             if (i > 0) {
                 dup2(pipefds[(i - 1) * 2], STDIN_FILENO);
             }
@@ -86,6 +122,9 @@ void execute_commands(tokenlist **commands, int num_cmds, tokenlist* command_his
         } else {
             pids[i] = pid;
         }
+
+        free(input_file);
+        free(output_file);
     }
 
     for (int i = 0; i < 2 * (num_cmds - 1); i++) {
@@ -93,15 +132,14 @@ void execute_commands(tokenlist **commands, int num_cmds, tokenlist* command_his
     }
 
     if(commands[num_cmds-1]->background) {
-        char *cmd_line = reconstruct_command_line(commands, num_cmds);
         add_job(jobs, num_jobs, pids[num_cmds-1], cmd_line, next_job_number);
-        free(cmd_line);
     } else {
         for (int i = 0; i < num_cmds; i++) {
             int status;
             waitpid(pids[i], &status, 0);
         }
     }
+    free(cmd_line);
 }
 
 void execute_single_command(tokenlist **commands, int num_cmds, tokenlist* command_history, job_t* jobs, int* num_jobs, int* next_job_number) {
