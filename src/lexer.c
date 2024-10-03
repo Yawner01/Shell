@@ -30,7 +30,7 @@ int main() {
 
 	while (1) {
 
-		int process_finished = check_jobs(jobs, 10, &num_jobs);
+		int process_finished = check_jobs(jobs, &num_jobs);
 
 		FD_ZERO(&readfds);
 		FD_SET(STDIN_FILENO, &readfds);
@@ -65,7 +65,7 @@ int main() {
 			* tokens contains substrings from input split by spaces
 			*/
 
-			check_jobs(jobs, 10, &num_jobs);
+			check_jobs(jobs, &num_jobs);
 
 			char *input = get_input();
 			//printf("whole input: %s\n", input);
@@ -98,7 +98,7 @@ int main() {
 			free_tokens(tokens);
 		}
 
-		check_jobs(jobs, 10, &num_jobs);
+		check_jobs(jobs, &num_jobs);
 
 	}
 

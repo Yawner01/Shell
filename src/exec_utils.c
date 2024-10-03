@@ -94,7 +94,7 @@ void execute_commands(tokenlist **commands, int num_cmds, tokenlist* command_his
 
     if(commands[num_cmds-1]->background) {
         char *cmd_line = reconstruct_command_line(commands, num_cmds);
-        add_job(jobs, 10, num_jobs, pids[num_cmds-1], cmd_line, next_job_number);
+        add_job(jobs, num_jobs, pids[num_cmds-1], cmd_line, next_job_number);
         free(cmd_line);
     } else {
         for (int i = 0; i < num_cmds; i++) {
@@ -173,7 +173,7 @@ void execute_single_command(tokenlist **commands, int num_cmds, tokenlist* comma
         exit(1);
     } else { //parent process
         if (commands[0]->background) {
-            add_job(jobs, 10, num_jobs, pid, cmd_line, next_job_number);
+            add_job(jobs, num_jobs, pid, cmd_line, next_job_number);
         } else {
             int status;
             wait(&status);

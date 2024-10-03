@@ -82,7 +82,8 @@ void cmd_cd(tokenlist* args) {
 #define MAX_JOBS 10  // Define a constant for max jobs
 
 void cmd_jobs(job_t* jobs, int* num_jobs) {
-    check_jobs(jobs, MAX_JOBS, num_jobs);
+
+    check_jobs(jobs, num_jobs);
 
     int active_jobs = 0;
     for (int i = 0; i < MAX_JOBS; i++) {
