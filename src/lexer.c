@@ -1,5 +1,4 @@
 #include "lexer.h"
-#include "pipeline.h"
 #include "commands.h"
 #include "env_utils.h"
 #include "exec_utils.h"
