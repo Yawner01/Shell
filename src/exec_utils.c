@@ -42,9 +42,19 @@ tokenlist **parse_pipes(tokenlist *tokens, int *num_cmds) {
     return commands;
 }
 
-void execute_commands(tokenlist **commands, int num_cmds, tokenlist* command_history, job_t* jobs, int* num_jobs, int* next_job_number) {
+void execute_commands(tokenlist **commands, 
+                      int num_cmds, 
+                      tokenlist* command_history, 
+                      job_t* jobs, 
+                      int* num_jobs, 
+                      int* next_job_number) {
     if (num_cmds == 1) {
-        execute_single_command(commands, num_cmds, command_history, jobs, num_jobs, next_job_number);
+        execute_single_command(commands, 
+                               num_cmds, 
+                               command_history, 
+                               jobs, 
+                               num_jobs, 
+                               next_job_number);
         return;
     }
 
@@ -142,7 +152,12 @@ void execute_commands(tokenlist **commands, int num_cmds, tokenlist* command_his
     free(cmd_line);
 }
 
-void execute_single_command(tokenlist **commands, int num_cmds, tokenlist* command_history, job_t* jobs, int* num_jobs, int* next_job_number) {
+void execute_single_command(tokenlist **commands, 
+                            int num_cmds, 
+                            tokenlist* command_history, 
+                            job_t* jobs, 
+                            int* num_jobs, 
+                            int* next_job_number) {
     // check built-in commands
     if (strcmp(commands[0]->items[0], "cd") == 0) {
         cmd_cd(commands[0]);

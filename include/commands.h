@@ -26,7 +26,8 @@ bool is_valid_command(const char* command);
 // Exits the process after background processes are completed and prints the last 3 commands.
 void cmd_exit(tokenlist* history);
 
-// Changes current working directory. If no arguments given, then $HOME becomes the current directory.
+// Changes current working directory. If no arguments given, 
+// then $HOME becomes the current directory. 
 void cmd_cd(tokenlist* args);
 
 // Prints a list of active background processes.

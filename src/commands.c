@@ -33,7 +33,8 @@ void cmd_exit(tokenlist* history) {
     exit(0);
 }
 
-// Changes current working directory. If no arguments given, then $HOME becomes the current directory.
+/* Changes current working directory. If no arguments given, then $HOME becomes the 
+ current directory. */
 void cmd_cd(tokenlist* args) {
 
     if (args == NULL) {
